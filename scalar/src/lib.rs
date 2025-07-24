@@ -10,11 +10,11 @@ pub fn pro(a: i8, b: i8) -> i8 {
     a * b
 }
 
-pub fn quo(a: i32, b: i32) -> i32 {
+pub fn quo(a: f32, b: f32) -> f32 {
     a / b
 }
 
-pub fn rem(a: i32, b: i32) -> i32 {
+pub fn rem(a: f32, b: f32) -> f32 {
     a % b
 }
 
@@ -26,7 +26,9 @@ mod tests {
     fn it_works() {
         let result = pro(6, 2);
         assert_eq!(result, 12);
-         let result = rem(6, 2);
-        assert_eq!(result, 0);
+         let result = rem(-128.23, 2.0);
+        assert_eq!(result,-0.22999573);
+        let result = quo(22.0, 2.0);
+        assert_eq!(result, 11);
     }
 }
