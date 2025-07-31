@@ -1,20 +1,38 @@
 use std::path::Path;
 use std::fs::OpenOptions;
-use std::fs;
+use std::io::Write;
 
 pub fn open_or_create<P: AsRef<Path>>(path: &P, content: &str) {
-    let mut options = OpenOptions::new();
-
-    let _file = options.create(true).write(true).append(true).open(path);
-    let _ = fs::write(path, content);
-    }
+    let mut options = OpenOptions::new().create(true).write(true).append(true).open(path).unwrap();
+    options.write(content.as_bytes()).unwrap();
+}
 
 #[cfg(test)]
 mod tests {
-
+    use super::*;
+    use std::{fs, io::Write};
 use tempfile::NamedTempFile;
+    #[test]
+fn test_with_non_existing_file() {
+    let file = NamedTempFile::new().unwrap();
+    let path = file.path().to_path_buf();
+    file.close().unwrap();
+    let content = "hello world!";
 
+    handling::open_or_create(&path, content);
 
+    assert_eq!(content, fs::read_to_string(path).unwrap());
+}
+
+#[test]
+fn test_with_empty_file() {
+    let path = NamedTempFile::new().unwrap().into_temp_path();
+    let content = "hello world!";
+
+    handling::open_or_create(&path, content);
+
+    assert_eq!(content, fs::read_to_string(path).unwrap());
+}
 
 #[test]
 fn test_with_file() {
