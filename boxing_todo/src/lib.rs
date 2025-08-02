@@ -1,16 +1,15 @@
 mod err;
 
 use std::error::Error;
-use serde::Deserialize;
 
-#[derive(Debug, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Task {
     pub id: u32,
     pub description: String,
     pub level: u32,
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct TodoList {
     pub title: String,
     pub tasks: Vec<Task>,
@@ -18,72 +17,88 @@ pub struct TodoList {
 
 impl TodoList {
     pub fn get_todo(file_name: &str) -> Result<Self, Box<dyn Error>> {
-        let content = std::fs::read_to_string(file_name)
-            .map_err(|e| err::ReadErr { child_err: Box::new(e) })?;
         
-        let todo_list: TodoList = serde_json::from_str(&content)
-            .map_err(|e| {
-                if content.trim().is_empty() {
-                    err::ParseErr::Empty
-                } else {
-                    err::ParseErr::Malformed(Box::new(e))
-                }
-            })?;
+        let content = std::fs::read_to_string(file_name)
+            .map_err(|e| Box::new(err::ReadErr { child_err: Box::new(e) }))?;
+
+        
+        if content.trim().is_empty() {
+            return Err(Box::new(err::ParseErr::Empty));
+        }
+
+        
+        let parsed = json::parse(&content)
+            .map_err(|e| Box::new(err::ParseErr::Malformed(Box::new(e))))?;
+
+        let todo_list = (|| {
+            let title = parsed["title"].as_str().ok_or("title field is missing or not a string")?.to_string();
+            let mut tasks = Vec::new();
+            let tasks_json = parsed["tasks"].as_array().ok_or("tasks field is missing or not an array")?;
+
+            for task_json in tasks_json {
+                let id = task_json["id"].as_u32().ok_or("task `id` is missing or invalid")?;
+                let description = task_json["description"].as_str().ok_or("task `description` is missing or invalid")?.to_string();
+                let level = task_json["level"].as_u32().ok_or("task `level` is missing or invalid")?;
+                tasks.push(Task { id, description, level });
+            }
+            Ok::<_, &str>(TodoList { title, tasks })
+        })().map_err(|e: &str| Box::new(err::ParseErr::Malformed(e.into())))?;
+
         
         if todo_list.tasks.is_empty() {
             return Err(Box::new(err::ParseErr::Empty));
         }
-        
+
         Ok(todo_list)
     }
 }
 
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use std::fs::File;
-//     use std::io::Write;
 
-//     #[test]
-//     fn test_get_todo_ok() {
-//         let content = r#"{"title":"My List","tasks":[{"id":0,"description":"task 1","level":1}]}"#;
-//         File::create("todo.json").unwrap().write_all(content.as_bytes()).unwrap();
-//         let todo_list = TodoList::get_todo("todo.json").unwrap();
-//         assert_eq!(todo_list.title, "My List");
-//         assert_eq!(todo_list.tasks.len(), 1);
-//         std::fs::remove_file("todo.json").unwrap();
-//     }
 
-//     #[test]
-//     fn test_get_todo_file_not_found() {
-//         let result = TodoList::get_todo("non_existent_file.json");
-//         assert!(result.is_err());
-//         let err = result.unwrap_err();
-//         // On vérifie que le message d'erreur est bien celui de ReadErr
-//         assert_eq!(err.to_string(), "Failed to read todo file");
-//         // On vérifie que le type sous-jacent est bien ReadErr
-//         assert!(err.is::<err::ReadErr>());
-//     }
 
-//     #[test]
-//     fn test_get_todo_malformed() {
-//         File::create("malformed.json").unwrap().write_all(b"{'bad json'").unwrap();
-//         let result = TodoList::get_todo("malformed.json");
-//         let err = result.unwrap_err();
-//         assert_eq!(err.to_string(), "Failed to parse todo file");
-//         assert!(err.downcast_ref::<err::ParseErr>().is_some());
-//         std::fs::remove_file("malformed.json").unwrap();
-//     }
 
-//     #[test]
-//     fn test_get_todo_empty() {
-//         let content = r#"{"title":"Empty List","tasks":[]}"#;
-//         File::create("empty.json").unwrap().write_all(content.as_bytes()).unwrap();
-//         let result = TodoList::get_todo("empty.json");
-//         let err = result.unwrap_err();
-//         assert_eq!(err.to_string(), "Failed to parse todo file");
-//         assert!(matches!(err.downcast_ref::<err::ParseErr>().unwrap(), err::ParseErr::Empty));
-//         std::fs::remove_file("empty.json").unwrap();
-//     }
-// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
