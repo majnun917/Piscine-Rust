@@ -1,5 +1,5 @@
 pub mod mall;
-use crate::mall::*;
+use crate::mall::{Mall, Guard, Store, Employee};
 use std::collections::HashMap;
 
 pub fn biggest_store(mall: &Mall) -> (&String, &Store) {
