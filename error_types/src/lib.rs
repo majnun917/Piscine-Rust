@@ -4,6 +4,7 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub struct FormError {
     form_values: HashMap<String, String>,
+    #[allow(dead_code)]
     date: String,
     err: &'static str,
 }
