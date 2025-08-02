@@ -33,7 +33,7 @@ impl TodoList {
         let todo_list = (|| {
             let title = parsed["title"].as_str().ok_or("title field is missing or not a string")?.to_string();
             let mut tasks = Vec::new();
-            let tasks_json = parsed["tasks"].as_array().ok_or("tasks field is missing or not an array")?;
+            let tasks_json = parsed["tasks"].is_array()?;
 
             for task_json in tasks_json {
                 let id = task_json["id"].as_u32().ok_or("task `id` is missing or invalid")?;
