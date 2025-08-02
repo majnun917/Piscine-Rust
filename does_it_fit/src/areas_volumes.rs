@@ -1,5 +1,4 @@
 
-
 pub enum GeometricalShapes {
     Square,
     Circle,
