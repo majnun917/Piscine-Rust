@@ -2,9 +2,9 @@ use chrono::Utc;
 use std::collections::HashMap;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct FormError {
-    form_values: HashMap<String, String>,
-    #[allow(dead_code)]
+    form_values: HashMap<&'static str, String>,
     date: String,
     err: &'static str,
 }
@@ -19,7 +19,7 @@ impl PartialEq for FormError {
 impl FormError {
     pub fn new(field_name: &'static str, field_value: String, err: &'static str) -> Self {
         let mut form_values = HashMap::new();
-        form_values.insert(field_name.to_string(), field_value);
+        form_values.insert(field_name, field_value);
         FormError {
             form_values,
             date: Utc::now().format("%Y-%m-%d %H:%M:%S").to_string(),
